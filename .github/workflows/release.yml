@@ -28,44 +28,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-n-publish:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-
-      - name: install build requirements
-        run: |
-          pip install build
-          pip freeze
-
-      - name: build release
-        run: |
-          python -m build --sdist --wheel .
-          ls -l dist
-
-      # ref: https://github.com/actions/upload-artifact#readme
-      - uses: actions/upload-artifact@v4
-        with:
-          name: repo2docker-${{ github.sha }}
-          path: "dist/*"
-          if-no-files-found: error
-
-      # This step is only run when a new tag is pushed
-      # all previous steps always run in order to exercise them
-      - name: Publish distribution to PyPI
-        if: startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_PASSWORD }}
-
   publish-docker:
     runs-on: ubuntu-22.04
     env:
-      DEFAULT_REGISTRY: quay.io
-      IMAGE_NAME: jupyterhub/repo2docker
+      DEFAULT_REGISTRY: harbor.depositar.io:4443
+      IMAGE_NAME: repo2docker/repo2docker
 
     services:
       # So that we can test this in PRs/branches
@@ -77,7 +44,7 @@ jobs:
     steps:
       - name: Should we push this image to a public registry?
         run: |
-          if [ "${{ startsWith(github.ref, 'refs/tags/') || (github.ref == 'refs/heads/main') }}" = "true" ]; then
+          if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
               REGISTRY=$DEFAULT_REGISTRY
           else
               REGISTRY=localhost:5000
@@ -113,9 +80,6 @@ jobs:
         run: |
           VERSION=$(python3 -c 'import versioneer; print(versioneer.get_version().replace("+", "-"))')
           TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$VERSION"
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            TAGS="$TAGS,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
-          fi
           if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
             TAGS="$TAGS,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
           fi
