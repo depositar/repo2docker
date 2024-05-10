@@ -31,8 +31,8 @@ jobs:
   publish-docker:
     runs-on: ubuntu-22.04
     env:
-      DEFAULT_REGISTRY: harbor.depositar.io:4443
-      IMAGE_NAME: repo2docker/repo2docker
+      DEFAULT_REGISTRY: harbor.depositar.io
+      IMAGE_NAME: depositar/repo2docker
 
     services:
       # So that we can test this in PRs/branches
