@@ -31,7 +31,7 @@ jobs:
   publish-docker:
     runs-on: ubuntu-22.04
     env:
-      DEFAULT_REGISTRY: harbor.depositar.io
+      DEFAULT_REGISTRY: quay.io
       IMAGE_NAME: depositar/repo2docker
 
     services:
